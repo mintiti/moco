@@ -4,6 +4,7 @@ import torch.optim
 import torch.utils.data
 import torch.utils.data.distributed
 import torchvision.models as models
+import torch.distributed as dist
 
 import moco.builder
 import moco.loader
@@ -18,7 +19,12 @@ DEFAULT_CONFIG = {
     'moco_k': 65536,
     'moco_m': 0.999,
     'moco_t': 0.07,
-    'mlp': False
+    'mlp': False,
+    'dist_backend' : 'nccl',
+    'dist_url' : 'tcp://localhost:10001',
+    'world_size' : 1,
+    'rank' : 1
+
 }
 
 
@@ -33,6 +39,10 @@ def create_model(checkpoint_file: str,
     """
     Create a model from a given checkpoint and config.
     """
+    # Initialize Distributed Data Parallel
+    dist.init_process_group(backend= DEFAULT_CONFIG['dist_backend'], init_method=DEFAULT_CONFIG['dist_url'],
+                            world_size=DEFAULT_CONFIG['world_size'], rank=DEFAULT_CONFIG['rank'])
+
     print("=> creating model '{}'".format(arch))
     model = moco.builder.MoCo(
         models.__dict__[arch],
@@ -40,6 +50,7 @@ def create_model(checkpoint_file: str,
     print(model)
 
     model.cuda()
+    model = torch.nn.parallel.DistributedDataParallel(model)
 
     print("=> loading checkpoint '{}'".format(checkpoint_file))
     if not gpu:
