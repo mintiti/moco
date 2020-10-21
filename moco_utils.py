@@ -46,7 +46,7 @@ def create_model(checkpoint_file: str,
         checkpoint = torch.load(checkpoint_file)
     else:
         # Map model to be loaded to specified single gpu.
-        loc = 'cuda:{}'.format(0) # TODO : add multiple gpu support if ever needed
+        loc = 'cuda:0' # TODO : add multiple gpu support if ever needed
         checkpoint = torch.load(checkpoint_file, map_location=loc)
     model.load_state_dict(checkpoint['state_dict'])
     print("=> loaded checkpoint '{}'"
