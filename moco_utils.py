@@ -23,7 +23,7 @@ DEFAULT_CONFIG = {
     'dist_backend' : 'nccl',
     'dist_url' : 'tcp://localhost:10001',
     'world_size' : 1,
-    'rank' : 1
+    'rank' : 0
 
 }
 
@@ -40,8 +40,9 @@ def create_model(checkpoint_file: str,
     Create a model from a given checkpoint and config.
     """
     # Initialize Distributed Data Parallel
-    dist.init_process_group(backend= DEFAULT_CONFIG['dist_backend'], init_method=DEFAULT_CONFIG['dist_url'],
-                            world_size=DEFAULT_CONFIG['world_size'], rank=DEFAULT_CONFIG['rank'])
+    if not dist.is_initialized():
+        dist.init_process_group(backend= DEFAULT_CONFIG['dist_backend'], init_method=DEFAULT_CONFIG['dist_url'],
+                                world_size=DEFAULT_CONFIG['world_size'], rank=DEFAULT_CONFIG['rank'])
 
     print("=> creating model '{}'".format(arch))
     model = moco.builder.MoCo(
